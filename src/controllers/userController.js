@@ -1,6 +1,8 @@
 const pool = require('../../db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const sendOTPEmail = require("../utils/sendEmail");
+const otpStore = require("../utils/otpStore");
 
 // Generate JWT
 const generateToken = (user) => {
@@ -13,46 +15,66 @@ const generateToken = (user) => {
     process.env.JWT_SECRET,
     { expiresIn: '2h' }
   );
-};
+}; 
 
-// Register a new user
 const registerUser = async (req, res) => {
   const { name, email, password, role } = req.body;
 
   try {
     // Check if user already exists
-    const existingUser = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const existingUser = await pool.query('SELECT * FROM userdetails WHERE email = $1', [email]);
     if (existingUser.rowCount > 0) {
       return res.status(400).json({ error: 'User already exists' });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Start a transaction
+    await pool.query('BEGIN');
 
-    // Insert user
-    const newUser = await pool.query(
-      'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, email, hashedPassword, role || 'customer']
+    // Insert into userdetails (name, email, role)
+    const userResult = await pool.query(
+      'INSERT INTO userdetails (name, email, role) VALUES ($1, $2, $3) RETURNING *',
+      [name, email, role || 'customer']
     );
 
-    // Generate token
-    const token = generateToken(newUser.rows[0]);
+    const userId = userResult.rows[0].user_id;
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert into usercredentials (user_id, password)
+    await pool.query(
+      'INSERT INTO usercredentials (user_id, password) VALUES ($1, $2)',
+      [userId, hashedPassword]
+    );
+
+    // Commit transaction
+    await pool.query('COMMIT');
+
+    // Generate JWT token
+    const token = generateToken({
+      user_id: userId,
+      email,
+      role: role || 'customer'
+    });
 
     res.status(201).json({
       message: 'User registered successfully',
       user: {
-        user_id: newUser.rows[0].user_id,
-        name: newUser.rows[0].name,
-        email: newUser.rows[0].email,
-        role: newUser.rows[0].role
+        user_id: userId,
+        name,
+        email,
+        role: role || 'customer'
       },
       token
     });
+
   } catch (err) {
-    console.error(err);
+    await pool.query('ROLLBACK');
+    console.error('Register Error:', err);
     res.status(500).send('Server error');
   }
 };
+
 
 // Login user
 const loginUser = async (req, res) => {

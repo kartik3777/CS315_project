@@ -6,6 +6,7 @@ const paymentRoutes = require('./routes/paymentRoute');
 const statusRoutes = require('./routes/statusRoute');
 const methodRoutes = require('./routes/methodRoutes');
 const userRoute = require('./routes/userRoute');
+const authRoutes = require('./routes/authRoute');
 
 dotenv.config(); 
 // const path = require('path');
@@ -30,6 +31,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/statuses', statusRoutes);
 app.use('/api/methods', methodRoutes);
 app.use('/api/users', userRoute);
+app.use('/api/auth', authRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
