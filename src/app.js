@@ -18,6 +18,11 @@ app.use(express.json());  // Middleware for parsing JSON bodies
 require('../db/index');
 
 // Use route files
+app.get("/", (req, res) => {
+  res.send({
+    "status": "OK"
+  })
+});
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
