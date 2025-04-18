@@ -4,8 +4,9 @@ const vehicleController = require('../controllers/vehicleController');
 
 // Routes for vehicles
 router.get('/available', vehicleController.getAvailableVehicles);
-router.post('/', vehicleController.addVehicle);
-// router.get('/:id', vehicleController.getVehicleById);
+router.post('/', vehicleController.addVehicle); //post request
+router.get('/', vehicleController.getAllVehicles); //get request
+router.get('/:id', vehicleController.getVehicleById);
 
 module.exports = router;
  

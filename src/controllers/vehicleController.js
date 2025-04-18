@@ -36,7 +36,36 @@ const addVehicle = async (req, res) => {
   }
 };
 
+const getAllVehicles = async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM vehicles ');
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const getVehicleById = async (req, res) => {
+  const vehicleId = req.params.id;
+
+  try {
+    const result = await pool.query('SELECT * FROM Vehicles WHERE vehicle_id = $1', [vehicleId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Vehicle not found' });
+    }
+
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching vehicle by ID:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 module.exports = {
   getAvailableVehicles,
-  addVehicle
+  addVehicle,
+  getAllVehicles,
+  getVehicleById
 };

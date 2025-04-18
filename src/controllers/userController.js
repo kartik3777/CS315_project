@@ -112,7 +112,7 @@ const getUserProfile = async (req, res) => {
 
 const getAllUsers = async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM users');
+    const result = await pool.query('SELECT * FROM userdetails ');
     res.status(200).json(result.rows);
   } catch (err) {
     console.error('Error fetching users:', err);
