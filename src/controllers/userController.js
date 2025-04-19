@@ -81,30 +81,47 @@ const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Check user
-    const userRes = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    if (userRes.rowCount === 0) {
+    // Step 1: Get user details by email
+    const userDetailsRes = await pool.query(
+      'SELECT * FROM userdetails WHERE email = $1',
+      [email]
+    );
+
+    if (userDetailsRes.rowCount === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const user = userRes.rows[0];
+    const userDetails = userDetailsRes.rows[0];
 
-    // Compare password
-    const isMatch = await bcrypt.compare(password, user.password);
+    // Step 2: Get password hash from usercredentials using the user's user_id
+    const credentialsRes = await pool.query(
+      'SELECT password FROM usercredentials WHERE user_id = $1',
+      [userDetails.user_id]
+    );
+
+    if (credentialsRes.rowCount === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const hashedPassword = credentialsRes.rows[0].password;
+
+    // Step 3: Compare password
+    const isMatch = await bcrypt.compare(password, hashedPassword);
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Generate token
-    const token = generateToken(user);
+    // Step 4: Generate token
+    const token = generateToken(userDetails); // Include fields needed for token
 
+    // Step 5: Respond
     res.json({
       message: 'Login successful',
       user: {
-        user_id: user.user_id,
-        name: user.name,
-        email: user.email,
-        role: user.role
+        user_id: userDetails.user_id,
+        name: userDetails.name,
+        email: userDetails.email,
+        role: userDetails.role
       },
       token
     });
@@ -113,6 +130,7 @@ const loginUser = async (req, res) => {
     res.status(500).send('Server error');
   }
 };
+
 
 // Get logged-in user's profile
 const getUserProfile = async (req, res) => {
