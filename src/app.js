@@ -9,7 +9,6 @@ const userRoute = require('./routes/userRoute');
 const authRoutes = require('./routes/authRoute');
 const cors = require("cors");
 const multer = require('multer');
-
 dotenv.config(); 
 // const path = require('path');
 // require('dotenv').config({ path: path.resolve(__dirname, '../config/.env') }); // 🔥 KEY LINE

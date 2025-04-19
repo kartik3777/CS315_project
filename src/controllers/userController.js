@@ -74,7 +74,7 @@ const registerUser = async (req, res) => {
     res.status(500).send('Server error');
   }
 };
-
+ 
 
 // Login user
 const loginUser = async (req, res) => {
@@ -119,7 +119,7 @@ const loginUser = async (req, res) => {
       message: 'Login successful',
       user: {
         user_id: userDetails.user_id,
-        name: userDetails.name,
+        name: userDetails.name, 
         email: userDetails.email,
         role: userDetails.role
       },
@@ -128,7 +128,7 @@ const loginUser = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');
-  }
+  }  
 };
 
 
