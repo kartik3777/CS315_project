@@ -7,13 +7,8 @@ const statusRoutes = require('./routes/statusRoute');
 const methodRoutes = require('./routes/methodRoutes');
 const userRoute = require('./routes/userRoute');
 const authRoutes = require('./routes/authRoute');
-<<<<<<< HEAD
 const cors = require("cors");
-=======
 const multer = require('multer');
-const cors = require('cors');
->>>>>>> 9fdc463 (kuch bhi)
-
 dotenv.config(); 
 // const path = require('path');
 // require('dotenv').config({ path: path.resolve(__dirname, '../config/.env') }); // 🔥 KEY LINE
@@ -48,9 +43,6 @@ app.use('/api/statuses', statusRoutes);
 app.use('/api/methods', methodRoutes);
 app.use('/api/users', userRoute);
 app.use('/api/auth', authRoutes);
-<<<<<<< HEAD
- 
-=======
 
 
 app.post('/upload-images', upload.array('encoded_image', 5), async (req, res) => {
@@ -94,7 +86,6 @@ app.post('/upload-images', upload.array('encoded_image', 5), async (req, res) =>
   }
 });
 
->>>>>>> 9fdc463 (kuch bhi)
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
