@@ -43,18 +43,51 @@ const getAvailableVehicles = async (req, res) => {
 
 // Controller to add a vehicle
 const addVehicle = async (req, res) => {
-  const { model, price_per_hour, status, location, brand_id, type_id } = req.body;
+  const {vehicle_id, model,type, registration_number,availability, price_per_day} = req.body;
+  const files = req.files;
+
+  // Basic Validation
+  if (!model || !price_per_day || !vehicle_id || !availability || !registration_number || !type ) {
+    return res.status(400).json({ error: 'Missing required vehicle details' });
+  }
+
+  if (!files || files.length === 0) {
+    return res.status(400).json({ error: 'At least one image is required' });
+  }
+
+  if (files.length > 5) {
+    return res.status(400).json({ error: 'Maximum 5 images allowed' });
+  }
+
   try {
-    const result = await pool.query(
-      'INSERT INTO vehicles (model, price_per_hour, status, location, brand_id, type_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [model, price_per_hour, status, location, brand_id, type_id]
+    await pool.query('BEGIN');
+
+    // Insert vehicle
+    const vehicleResult = await pool.query(
+      'INSERT INTO vehicles (model, price_per_day, availability, type, vehicle_id, registration_number,status) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING vehicle_id',
+      [model, price_per_day, availability, type, vehicle_id, registration_number, 'available']
     );
-    res.json(result.rows[0]);
+
+
+    // Insert associated images
+    const imageQuery = 'INSERT INTO images (vehicle_id, encoded_image) VALUES ($1, $2)';
+    for (const file of files) {
+      await pool.query(imageQuery, [vehicle_id, file.buffer]);
+    }
+    await pool.query('COMMIT');
+
+    res.json({
+      success: true,
+      vehicle_id,
+      message: `Vehicle added and ${files.length} image(s) uploaded successfully`
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
+    await pool.query('ROLLBACK');
+    console.error('Error adding vehicle:', err);
+    res.status(500).json({ error: 'Failed to add vehicle', details: err.message });
   }
 };
+
 
 const getAllVehicles = async (req, res) => {
   try {
