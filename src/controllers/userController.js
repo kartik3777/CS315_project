@@ -160,9 +160,90 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+const getUser = async (req, res) => {
+  const userId = req.params.id;
+  try {
+    // Fetch the user's name and email
+    const user = await pool.query('SELECT name, email FROM userdetails WHERE user_id = $1', [userId]);
+
+    // Fetch the vehicles rented by the user along with the images and owner details
+    const vehiclesHistory = await pool.query(`
+      SELECT 
+        v.*, 
+        b.start_date, 
+        b.end_date, 
+        ARRAY_AGG(i.encoded_image) AS encoded_images,
+        u.name AS owner_name,
+        u.email AS owner_email
+      FROM 
+        bookings b
+      JOIN 
+        vehicles v ON b.vehicle_id = v.vehicle_id
+      LEFT JOIN 
+        images i ON v.vehicle_id = i.vehicle_id
+      JOIN 
+        userdetails u ON v.owner_id = u.user_id
+      WHERE 
+        b.user_id = $1
+      GROUP BY 
+        v.vehicle_id, b.start_date, b.end_date, u.name, u.email
+    `, [userId]);
+
+    // If the user is not found
+    if (user.rowCount === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Construct the response object
+    const response = {
+      user: {
+        name: user.rows[0].name,
+        email: user.rows[0].email,
+      },
+      vehiclesRented: vehiclesHistory.rows.map(vehicle => ({
+        start_date: vehicle.start_date,
+        end_date: vehicle.end_date,
+        owner_name: vehicle.owner_name,
+        owner_email: vehicle.owner_email,
+        images: vehicle.encoded_images,
+        vehicleDetails: {
+          
+          ...vehicle, // Includes all vehicle details from the vehicles table
+          
+        },
+      })),
+    };
+
+    // Send the response
+    res.status(200).json(response);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+const getOwnerDetials = async (req,res) => {
+  const ownerId = req.params.id;
+  try {
+    const result = await pool.query('SELECT name, email FROM userdetails WHERE user_id = $1', [ownerId]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Owner not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+}
+
+
 module.exports = {
   registerUser,
   loginUser,
   getUserProfile,
-  getAllUsers
+  getAllUsers,
+  getUser,
+  getOwnerDetials
 };
