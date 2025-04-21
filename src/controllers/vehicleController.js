@@ -31,7 +31,7 @@ const getAvailableVehicles = async (req, res) => {
           encoded_image: img.encoded_image.toString('base64')
         }));
       }
-      return vehicle;
+      return vehicle; 
     });
 
     res.status(200).json(vehiclesWithImages);
