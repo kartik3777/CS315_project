@@ -16,7 +16,7 @@ dotenv.config();
 const app = express();
 app.use(cors(
   {
-      origin :['http://localhost:3000'],
+      origin :['http://localhost:3000', 'https://cs-315-frontend.vercel.app'],
       methods:["GET", "POST", "PATCH", "DELETE"],
       credentials: true
   }
@@ -39,7 +39,7 @@ app.get("/", (req, res) => {
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/statuses', statusRoutes);
+app.use('/api/statuses', statusRoutes); 
 app.use('/api/methods', methodRoutes);
 app.use('/api/users', userRoute);
 app.use('/api/auth', authRoutes);
