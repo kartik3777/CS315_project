@@ -30,23 +30,23 @@ const addVehicle = async (req, res) => {
       [model, price_per_hour, status, location, brand_id, type_id]
     );
     res.json(result.rows[0]);
-  } catch (err) {
+  } catch (err) { 
     console.error(err);
     res.status(500).send('Server error');
   }
-};
+}; 
 
 const getAllVehicles = async (req, res) => {
   try {
     const query = `
-      SELECT 
-        v.*,
+      SELECT   
+        v.*, 
         COALESCE(
           json_agg(
             json_build_object(
               'vehicle_id', i.vehicle_id,
               'encoded_image', i.encoded_image
-            )
+            ) 
           ) FILTER (WHERE i.vehicle_id IS NOT NULL),
           '[]'
         ) AS images
