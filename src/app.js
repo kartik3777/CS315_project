@@ -16,7 +16,7 @@ dotenv.config();
 const app = express();
 app.use(cors(
   {
-      origin :['http://localhost:3000'],
+      origin :['http://localhost:3000', 'https://cs-315-frontend.vercel.appg'],
       methods:["GET", "POST", "PATCH", "DELETE"],
       credentials: true
   }
