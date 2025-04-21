@@ -43,11 +43,11 @@ const getAvailableVehicles = async (req, res) => {
 
 // Controller to add a vehicle
 const addVehicle = async (req, res) => {
-  const {vehicle_id, model,type, registration_number,availability, price_per_day} = req.body;
+  const {owner_id, model,type, registration_number, price_per_day, manufacturing_date} = req.body;
   const files = req.files;
 
   // Basic Validation
-  if (!model || !price_per_day || !vehicle_id || !availability || !registration_number || !type ) {
+  if (!owner_id || !model || !price_per_day  || !registration_number || !type || !manufacturing_date) {
     return res.status(400).json({ error: 'Missing required vehicle details' });
   }
 
@@ -64,21 +64,20 @@ const addVehicle = async (req, res) => {
 
     // Insert vehicle
     const vehicleResult = await pool.query(
-      'INSERT INTO vehicles (model, price_per_day, availability, type, vehicle_id, registration_number,status) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING vehicle_id',
-      [model, price_per_day, availability, type, vehicle_id, registration_number, 'available']
+      'INSERT INTO vehicles (owner_id, model, price_per_day, availability, type, registration_number,status, manufacturing_date) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING vehicle_id',
+      [owner_id,model, price_per_day, true, type, registration_number, 'available', manufacturing_date]
     );
-
+    console.log(vehicleResult)
 
     // Insert associated images
     const imageQuery = 'INSERT INTO images (vehicle_id, encoded_image) VALUES ($1, $2)';
     for (const file of files) {
-      await pool.query(imageQuery, [vehicle_id, file.buffer]);
+      await pool.query(imageQuery, [vehicleResult.rows[0].vehicle_id, file.buffer]);
     }
     await pool.query('COMMIT');
 
     res.json({
       success: true,
-      vehicle_id,
       message: `Vehicle added and ${files.length} image(s) uploaded successfully`
     });
   } catch (err) {
@@ -132,18 +131,53 @@ const getVehicleById = async (req, res) => {
   const vehicleId = req.params.id;
 
   try {
-    const result = await pool.query('SELECT * FROM Vehicles WHERE vehicle_id = $1', [vehicleId]);
+    // Fetch vehicle details with owner info
+    const vehicleResult = await pool.query(`
+      SELECT v.*, u.name AS owner_name, u.email AS owner_email
+      FROM vehicles v
+      JOIN userdetails u ON v.owner_id = u.user_id
+      WHERE v.vehicle_id = $1
+    `, [vehicleId]);
 
-    if (result.rows.length === 0) {
+    if (vehicleResult.rows.length === 0) {
       return res.status(404).json({ message: 'Vehicle not found' });
     }
 
-    res.status(200).json(result.rows[0]);
+    const vehicle = vehicleResult.rows[0];
+
+    // Fetch booking history with renter info
+    const bookingsResult = await pool.query(`
+      SELECT b.start_date, b.end_date, u.name AS user_name, u.email AS user_email
+      FROM bookings b
+      JOIN userdetails u ON b.user_id = u.user_id
+      WHERE b.vehicle_id = $1
+      ORDER BY b.start_date ASC
+    `, [vehicleId]);
+
+    res.status(200).json({
+      vehicleDetails: {
+        ...vehicle,
+        owner: {
+          name: vehicle.owner_name,
+          email: vehicle.owner_email
+        }
+      },
+      bookings: bookingsResult.rows.map(booking => ({
+        start_date: booking.start_date,
+        end_date: booking.end_date,
+        user: {
+          name: booking.user_name,
+          email: booking.user_email
+        }
+      }))
+    });
+
   } catch (error) {
     console.error('Error fetching vehicle by ID:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 const deleteVehicle = async (req, res) => {
   const vehicleId = req.params.id;

@@ -7,6 +7,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 router.post('/register', userController.registerUser);
 router.post('/login', userController.loginUser);
 router.get('/', userController.getAllUsers);
+router.get('/:id', userController.getUser)
 // Protected Route****************************************************
 router.get('/profile', authMiddleware, userController.getUserProfile);
 
