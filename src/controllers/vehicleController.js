@@ -113,13 +113,12 @@ const getAllVehicles = async (req, res) => {
 
     
     const result = await pool.query(query);
-    
-    // If you want to convert the images to base64 for easier client-side handling
+
     const vehiclesWithImages = result.rows.map(vehicle => {
       if (vehicle.images && vehicle.images.length > 0) {
         vehicle.images = vehicle.images.map(img => ({
           ...img,
-          encoded_image: img.encoded_image.toString('base64')
+          encoded_image: Buffer.from(img.encoded_image).toString('base64')
         }));
       }
       return vehicle;
@@ -131,6 +130,7 @@ const getAllVehicles = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 const getVehicleById = async (req, res) => {
   const vehicleId = req.params.id;
