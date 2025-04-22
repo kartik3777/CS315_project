@@ -43,6 +43,7 @@ const getAvailableVehicles = async (req, res) => {
 
 // Controller to add a vehicle
 const addVehicle = async (req, res) => {
+
   const {owner_id, model,type, registration_number, price_per_day, manufacturing_date} = req.body;
   const files = req.files;
 
@@ -58,15 +59,15 @@ const addVehicle = async (req, res) => {
   if (files.length > 5) {
     return res.status(400).json({ error: 'Maximum 5 images allowed' });
   }
-
-  try {
-    await pool.query('BEGIN');
+ 
+  try { 
+    await pool.query('BEGIN'); 
 
     // Insert vehicle
-    const vehicleResult = await pool.query(
-      'INSERT INTO vehicles (owner_id, model, price_per_day, availability, type, registration_number,status, manufacturing_date) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING vehicle_id',
+    const vehicleResult = await pool.query( 
+      'INSERT INTO vehicles (owner_id, model, price_per_day, availability, type, registration_number,status, manufacturing_date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING vehicle_id',
       [owner_id,model, price_per_day, true, type, registration_number, 'available', manufacturing_date]
-    );
+    ); 
     console.log(vehicleResult)
 
     // Insert associated images
@@ -75,7 +76,7 @@ const addVehicle = async (req, res) => {
       await pool.query(imageQuery, [vehicleResult.rows[0].vehicle_id, file.buffer]);
     }
     await pool.query('COMMIT');
-
+ 
     res.json({
       success: true,
       message: `Vehicle added and ${files.length} image(s) uploaded successfully`
@@ -91,21 +92,25 @@ const addVehicle = async (req, res) => {
 const getAllVehicles = async (req, res) => {
   try {
     const query = `
-      SELECT   
-        v.*, 
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'vehicle_id', i.vehicle_id,
-              'encoded_image', i.encoded_image
-            ) 
-          ) FILTER (WHERE i.vehicle_id IS NOT NULL),
-          '[]'
-        ) AS images
-      FROM vehicles v
-      LEFT JOIN images i ON v.vehicle_id = i.vehicle_id
-      GROUP BY v.vehicle_id
-    `;
+  SELECT   
+    v.*, 
+    ud.name AS owner_name,
+    ud.email AS owner_email,
+    COALESCE(
+      json_agg(
+        json_build_object(
+          'vehicle_id', i.vehicle_id,
+          'encoded_image', i.encoded_image
+        ) 
+      ) FILTER (WHERE i.vehicle_id IS NOT NULL),
+      '[]'
+    ) AS images
+  FROM vehicles v
+  LEFT JOIN images i ON v.vehicle_id = i.vehicle_id
+  LEFT JOIN userDetails ud ON v.owner_id = ud.user_id
+  GROUP BY v.vehicle_id, ud.name, ud.email
+`;
+
     
     const result = await pool.query(query);
     

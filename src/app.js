@@ -43,7 +43,7 @@ app.use('/api/statuses', statusRoutes);
 app.use('/api/methods', methodRoutes);
 app.use('/api/users', userRoute);
 app.use('/api/auth', authRoutes);
-
+ 
 
 app.post('/upload-images', upload.array('encoded_image', 5), async (req, res) => {
   const vehicleId = req.body.vehicle_id;
