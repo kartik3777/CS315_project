@@ -147,9 +147,10 @@ const addMoney = async (req, res) => {
     res.status(500).send('Error adding money');
   }
 }
-
 const getTransactionHistory = async (req, res) => {
-  const { userId } = req.params;
+  const { user_id } = req.params;
+  console.log(user_id); // fixed variable name
+
   try {
     const transactions = await pool.query(`
       SELECT 
@@ -169,9 +170,13 @@ const getTransactionHistory = async (req, res) => {
         OR (T.to_user = $1 AND T.from_user = U.user_id)
       WHERE T.from_user = $1 OR T.to_user = $1
       ORDER BY T.date DESC
-    `, [userId]);
+    `, [user_id]);
 
-    res.status(200).json(transactions.rows);
+    res.status(200).json({
+      status: "success",
+      message: "Transaction history fetched successfully",
+      data: transactions.rows
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
