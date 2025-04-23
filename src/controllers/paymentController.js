@@ -117,7 +117,28 @@ const getPaymentDetails = async (req, res) => {
   }
 };
 
-
+const getAllVehiclesByOwner = async (req, res) => {
+  const { user_id } = req.params;
+  try {
+    const vehicles = await pool.query(`
+      SELECT v.*, u.name AS owner_name, u.email AS owner_email
+      FROM vehicles v
+      JOIN userdetails u ON v.owner_id = u.user_id
+      WHERE v.owner_id = $1
+    `, [user_id]);
+    if (vehicles.rowCount === 0) {
+      return res.status(404).json({ error: 'No vehicles found for this owner.' });
+    }
+    res.status(200).json({
+      status: "success",
+      message: "Vehicles fetched successfully", 
+      data: vehicles.rows
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 const addMoney = async (req, res) => {
   const { user_id, amount } = req.body;
@@ -204,5 +225,6 @@ module.exports = {
   getPaymentDetails,
   addMoney,
   getTransactionHistory,
-  getWallet
+  getWallet,
+  getAllVehiclesByOwner
 };
