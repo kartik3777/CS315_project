@@ -167,10 +167,14 @@ const getAllUsers = async (req, res) => {
 const getUser = async (req, res) => {
   const userId = req.params.id;
   try {
-    // Fetch the user's name and email
+    // Fetch user name and email
     const user = await pool.query('SELECT name, email FROM userdetails WHERE user_id = $1', [userId]);
 
-    // Fetch the vehicles rented by the user along with the images and owner details
+    if (user.rowCount === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Fetch vehicles rented by the user
     const vehiclesHistory = await pool.query(`
       SELECT 
         v.*, 
@@ -193,38 +197,54 @@ const getUser = async (req, res) => {
         v.vehicle_id, b.start_date, b.end_date, u.name, u.email
     `, [userId]);
 
-    // If the user is not found
-    if (user.rowCount === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    const currentDate = new Date();
 
-    // Construct the response object
-    const response = {
-      user: {
-        name: user.rows[0].name,
-        email: user.rows[0].email,
-      },
-      vehiclesRented: vehiclesHistory.rows.map(vehicle => ({
+    // Separate current and past rentals
+    const currentRentals = [];
+    const pastRentals = [];
+
+    vehiclesHistory.rows.forEach(vehicle => {
+      const isCurrentlyRented = new Date(vehicle.end_date) >= currentDate;
+
+      const vehicleData = {
         start_date: vehicle.start_date,
         end_date: vehicle.end_date,
         owner_name: vehicle.owner_name,
         owner_email: vehicle.owner_email,
         images: vehicle.encoded_images,
-        vehicleDetails: {
-          
-          ...vehicle, // Includes all vehicle details from the vehicles table
-          
-        },
-      })),
+        vehicleDetails: { ...vehicle }
+      };
+
+      // Remove duplicate data from vehicleDetails
+      delete vehicleData.vehicleDetails.start_date;
+      delete vehicleData.vehicleDetails.end_date;
+      delete vehicleData.vehicleDetails.encoded_images;
+      delete vehicleData.vehicleDetails.owner_name;
+      delete vehicleData.vehicleDetails.owner_email;
+
+      if (isCurrentlyRented) {
+        currentRentals.push(vehicleData);
+      } else {
+        pastRentals.push(vehicleData);
+      }
+    });
+
+    const response = {
+      user: {
+        name: user.rows[0].name,
+        email: user.rows[0].email,
+      },
+      currentlyRentedVehicles: currentRentals,
+      vehiclesRentedHistory: pastRentals
     };
 
-    // Send the response
     res.status(200).json(response);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 const getOwnerDetials = async (req,res) => {
   const ownerId = req.params.id;
