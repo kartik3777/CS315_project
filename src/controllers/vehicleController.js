@@ -64,7 +64,7 @@ const addVehicle = async (req, res) => {
 
     // Insert vehicle
     const vehicleResult = await pool.query(
-      'INSERT INTO vehicles (owner_id, model, price_per_day, availability, type, registration_number,status, manufacturing_date) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING vehicle_id',
+      'INSERT INTO vehicles (owner_id, model, price_per_day, availability, type, registration_number,status, manufacturing_date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING vehicle_id',
       [owner_id,model, price_per_day, true, type, registration_number, 'available', manufacturing_date]
     );
     console.log(vehicleResult)

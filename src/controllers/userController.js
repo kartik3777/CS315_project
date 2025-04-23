@@ -46,6 +46,10 @@ const registerUser = async (req, res) => {
       'INSERT INTO usercredentials (user_id, password) VALUES ($1, $2)',
       [userId, hashedPassword]
     );
+    await pool.query(
+      'INSERT INTO wallet (user_id, amount) VALUES ($1, $2)',
+      [userId, 0]
+    )
 
     // Commit transaction
     await pool.query('COMMIT');
