@@ -14,6 +14,10 @@ const createPayment = async (req, res) => {
     const days = (new Date(end_date) - new Date(start_date)) / (1000 * 60 * 60 * 24);
     const amount = vehicle.price_per_day * days;
 
+    if(days<0){
+      return res.status(400).json({ error: 'Invalid date range.' });
+    }
+
     if (action === "buy") {
       const currentBalance = await pool.query('SELECT amount FROM wallet WHERE user_id = $1', [user_id]);
       if (currentBalance.rows[0].amount < amount) {
@@ -36,7 +40,7 @@ const createPayment = async (req, res) => {
       const transactionID = transaction.rows[0].transaction_id;
 
       const booking = await pool.query(`
-        INSERT INTO bookings (user_id, vehicle_id, start_time, end_time, transaction_id)
+        INSERT INTO bookings (user_id, vehicle_id, start_date, end_date, transaction_id)
         VALUES ($1, $2, $3, $4, $5) RETURNING *;
       `, [user_id, vehicle_id, start_date, end_date, transactionID]);
 
@@ -133,7 +137,7 @@ const addMoney = async (req, res) => {
     `, [amount, user_id]);
 
     const addTrasaction = await pool.query(`
-      INSERT INTO transactions (from_user, to_user , amount,status type)
+      INSERT INTO transactions (from_user, to_user , amount,status, type)
       VALUES ($1, $2,$3,'success', 'topup') RETURNING *;
     `, [user_id,user_id, amount]);
 
