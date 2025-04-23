@@ -1,4 +1,5 @@
 const pool = require('../../db');
+const { get } = require('../utils/otpStore');
 
 // Create a payment
 const createPayment = async (req, res) => {
@@ -173,10 +174,26 @@ const getTransactionHistory = async (req, res) => {
   }
 };
 
+const getWallet = async (req, res) => {
+  const { user_id } = req.params;
+
+  try {
+    const wallet = await pool.query('SELECT amount FROM wallet WHERE user_id = $1', [user_id]);
+    if (wallet.rowCount === 0) {
+      return res.status(404).json({ error: 'Wallet not found.' });
+    }
+
+    res.status(200).json(wallet.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+};
 
 module.exports = {
   createPayment,
   getPaymentDetails,
   addMoney,
-  getTransactionHistory
+  getTransactionHistory,
+  getWallet
 };
