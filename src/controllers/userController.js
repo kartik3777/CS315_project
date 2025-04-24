@@ -201,7 +201,7 @@ const getUser = async (req, res) => {
     const vehiclesRentedHistory = [];
 
     vehiclesHistory.rows.forEach(vehicle => {
-      const isCurrentlyRented = new Date(vehicle.end_date) >= currentDate;
+      const isCurrentlyRented = vehicle.availability === false ;
 
       const vehicleDetails = {
         ...vehicle,

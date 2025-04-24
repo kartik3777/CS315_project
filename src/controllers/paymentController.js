@@ -77,7 +77,7 @@ const createPayment = async (req, res) => {
       }
 
       await pool.query(`
-        UPDATE bookings SET end_time = $1 WHERE user_id = $2 AND vehicle_id = $3 AND start_date = $4;
+        UPDATE bookings SET end_date = $1 WHERE user_id = $2 AND vehicle_id = $3 AND start_date = $4;
       `, [currentDate, user_id, vehicle_id, start_date]);
 
       await pool.query(`
