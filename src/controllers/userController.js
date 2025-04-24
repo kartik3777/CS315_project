@@ -173,7 +173,7 @@ const getUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Fetch vehicles rented by the user
+    // Fetch vehicle rental history
     const vehiclesHistory = await pool.query(`
       SELECT 
         v.*, 
@@ -197,7 +197,8 @@ const getUser = async (req, res) => {
     `, [userId]);
 
     const currentDate = new Date();
-    const rentedVehicles = [];
+    const currentlyRentedVehicles = [];
+    const vehiclesRentedHistory = [];
 
     vehiclesHistory.rows.forEach(vehicle => {
       const isCurrentlyRented = new Date(vehicle.end_date) >= currentDate;
@@ -212,10 +213,15 @@ const getUser = async (req, res) => {
         images: vehicle.encoded_images
       };
 
-      // Clean duplicate fields if needed (not strictly necessary here)
       delete vehicleDetails.encoded_images;
 
-      rentedVehicles.push({ vehicleDetails });
+      const vehicleObj = { vehicleDetails };
+
+      if (isCurrentlyRented) {
+        currentlyRentedVehicles.push(vehicleObj);
+      } else {
+        vehiclesRentedHistory.push(vehicleObj);
+      }
     });
 
     const response = {
@@ -223,7 +229,8 @@ const getUser = async (req, res) => {
         name: user.rows[0].name,
         email: user.rows[0].email,
       },
-      rentedVehicles: rentedVehicles
+      currentlyRentedVehicles,
+      vehiclesRentedHistory
     };
 
     res.status(200).json(response);
@@ -232,6 +239,7 @@ const getUser = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 
 
