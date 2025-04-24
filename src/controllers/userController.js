@@ -163,7 +163,6 @@ const getAllUsers = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
 const getUser = async (req, res) => {
   const userId = req.params.id;
   try {
@@ -198,35 +197,25 @@ const getUser = async (req, res) => {
     `, [userId]);
 
     const currentDate = new Date();
-
-    // Separate current and past rentals
-    const currentRentals = [];
-    const pastRentals = [];
+    const rentedVehicles = [];
 
     vehiclesHistory.rows.forEach(vehicle => {
       const isCurrentlyRented = new Date(vehicle.end_date) >= currentDate;
 
-      const vehicleData = {
+      const vehicleDetails = {
+        ...vehicle,
         start_date: vehicle.start_date,
         end_date: vehicle.end_date,
+        currently_rented: isCurrentlyRented,
         owner_name: vehicle.owner_name,
         owner_email: vehicle.owner_email,
-        images: vehicle.encoded_images,
-        vehicleDetails: { ...vehicle }
+        images: vehicle.encoded_images
       };
 
-      // Remove duplicate data from vehicleDetails
-      delete vehicleData.vehicleDetails.start_date;
-      delete vehicleData.vehicleDetails.end_date;
-      delete vehicleData.vehicleDetails.encoded_images;
-      delete vehicleData.vehicleDetails.owner_name;
-      delete vehicleData.vehicleDetails.owner_email;
+      // Clean duplicate fields if needed (not strictly necessary here)
+      delete vehicleDetails.encoded_images;
 
-      if (isCurrentlyRented) {
-        currentRentals.push(vehicleData);
-      } else {
-        pastRentals.push(vehicleData);
-      }
+      rentedVehicles.push({ vehicleDetails });
     });
 
     const response = {
@@ -234,8 +223,7 @@ const getUser = async (req, res) => {
         name: user.rows[0].name,
         email: user.rows[0].email,
       },
-      currentlyRentedVehicles: currentRentals,
-      vehiclesRentedHistory: pastRentals
+      rentedVehicles: rentedVehicles
     };
 
     res.status(200).json(response);
@@ -244,6 +232,7 @@ const getUser = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 
 const getOwnerDetials = async (req,res) => {
