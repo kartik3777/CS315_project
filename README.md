@@ -1,10 +1,10 @@
 # Vehicle Management System with PostgreSQL
 
-This project is a robust Vehicle Management System designed and implemented using PostgreSQL. It serves as a comprehensive backend solution for managing data related to vehicles, their owners, and service histories. The core focus of this project was to build a highly efficient, reliable, and scalable database through meticulous schema design, advanced normalization (up to BCNF), and strategic query optimization.
+This project is a robust Vehicle Management System designed and implemented using **PostgreSQL**. It serves as a comprehensive backend solution for managing data related to vehicles, their owners, and service histories. The core focus of this project was to build a highly efficient, reliable, and scalable database through meticulous schema design, advanced normalization (up to BCNF), and strategic query optimization.
 
 ---
 
-## 📜 Problem Statement
+## Problem Statement
 
 In any automotive or fleet management business, handling vast amounts of interconnected data is a significant challenge. Information about vehicles (make, model, year, VIN), owners (names, addresses, contact details), and service records (maintenance type, date, cost) needs to be stored, managed, and retrieved efficiently. An unoptimized or poorly designed database can lead to:
 
@@ -17,7 +17,7 @@ This project directly addresses these challenges by creating a database that is 
 
 ---
 
-## 🚀 What This Project Does
+## What This Project Does
 
 This Vehicle Management System provides the foundational database structure to:
 
@@ -29,12 +29,9 @@ This Vehicle Management System provides the foundational database structure to:
 
 
 
-[Image of a database schema diagram]
-
-
 ---
 
-## 🔑 Database Design & Normalization
+## Database Design & Normalization
 
 A key feature of this project is its highly normalized database schema, which adheres to **Boyce-Codd Normal Form (BCNF)**. Normalization is the process of organizing columns and tables in a relational database to minimize data redundancy and improve data integrity.
 
@@ -57,7 +54,7 @@ We systematically progressed through the normal forms to eliminate dependencies 
 
 ---
 
-## 🏛️ SQL Schema and Relationships
+## SQL Schema and Relationships
 
 The final schema consists of normalized tables with clear relationships enforced by primary and foreign key constraints.
 
@@ -104,23 +101,24 @@ CREATE TABLE ServiceRecords (
         ON DELETE CASCADE
 );
 Relationship: One-to-Many (Vehicles to ServiceRecords). One vehicle can have multiple service records.
+```
+## Optimization & Indexing
 
-⚡ Query Optimization & Indexing
 Performance was a top priority. We engineered the system to handle queries efficiently, even as the dataset grows.
 
-How Queries are Optimized
+### How Queries are Optimized
 Optimization was achieved by leveraging foundational relational algebra principles:
 
-Selection (σ): Using precise WHERE clauses to filter data at the source, reducing the number of rows processed.
+* Selection (σ): Using precise WHERE clauses to filter data at the source, reducing the number of rows processed.
 
-Projection (π): Selecting only the necessary columns (SELECT column1, column2) instead of using SELECT *, which minimizes data transfer.
+* Projection (π): Selecting only the necessary columns (SELECT column1, column2) instead of using SELECT *, which minimizes data transfer.
 
-Joins (⨝): Structuring JOIN operations to be as efficient as possible, ensuring that smaller datasets are joined first and that conditions are applied correctly.
+* Joins (⨝): Structuring JOIN operations to be as efficient as possible, ensuring that smaller datasets are joined first and that conditions are applied correctly.
 
 Example of an Optimized Query:
 
 SQL
-
+```
 -- Find the service history for a specific vehicle by its VIN
 SELECT
     s.service_date,
@@ -133,9 +131,9 @@ JOIN
 WHERE
     v.vin = '1HGCM82638A123456'; -- Highly selective WHERE clause
 This query is efficient because it uses a JOIN on a primary key and filters using a unique, indexed column (vin).
-
+```
 How Indexing is Applied
-Indexes act like a book's index, allowing the database to find data without scanning the entire table. We applied indexing strategies on columns frequently used in WHERE clauses and JOIN conditions.
+Indexes act like a booking index, allowing the database to find data without scanning the entire table. We applied indexing strategies on columns frequently used in WHERE clauses and JOIN conditions.
 
 Primary Key Indexes: PostgreSQL automatically creates indexes on PRIMARY KEY columns (owner_id, vehicle_id, service_id).
 
@@ -147,20 +145,20 @@ Example of Creating an Index:
 The vin column in the Vehicles table is unique and will be used often for lookups. An index significantly speeds up these searches.
 
 SQL
-
+```
 CREATE INDEX idx_vehicles_vin ON Vehicles(vin);
 Similarly, to quickly find all vehicles belonging to an owner, an index on the owner_id foreign key in the Vehicles table is crucial.
-
+```
 SQL
-
+```
 CREATE INDEX idx_vehicles_owner_id ON Vehicles(owner_id);
 These indexes dramatically reduce query execution time for common lookup and join operations, ensuring a responsive system.
-
-👨‍💻 Authors
+```
+## Authors
 This project was designed and developed by:
 
-Mohd Nasar Siddiqui
+* Mohd Nasar Siddiqui
 
-Kartik
+* Kartik
 
-Nilesh Maheshwari
+* Nilesh Maheshwari
